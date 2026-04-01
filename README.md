@@ -19,16 +19,10 @@ Believe it or not, George formats JSON.
 
 ## Installation
 
-1. Clone or download this repository
-2. Install dependencies and build:
-   ```bash
-   npm install
-   npm run build
-   ```
-3. Open Chrome and navigate to `chrome://extensions`
-4. Enable **Developer mode** (toggle in the top right)
-5. Click **Load unpacked**
-6. Select the `dist` folder inside this project
+1. Open Chrome and navigate to `chrome://extensions`
+2. Enable **Developer mode** (toggle in the top right)
+3. Click **Load unpacked**
+4. Select the **`dist`** folder inside this project
 
 ## Development
 
