@@ -36,40 +36,41 @@ function detectJSON(): { data: JsonValue; raw: string } | null {
   }
 }
 
-function storageGet(key: string): string | null {
-  try { return localStorage.getItem(key); } catch { return null; }
+async function storageGet(key: string, defaultValue: string): Promise<string> {
+  const result = await chrome.storage.local.get({ [key]: defaultValue });
+  return result[key];
 }
 
-function storageSet(key: string, value: string): void {
-  try { localStorage.setItem(key, value); } catch {}
+async function storageSet(key: string, value: string): Promise<void> {
+  await chrome.storage.local.set({ [key]: value });
 }
 
-function getTheme(): string {
-  return storageGet("jv-theme") || "auto";
+async function getTheme(): Promise<string> {
+  return storageGet("jv-theme", "auto");
 }
 
-function setTheme(theme: string): void {
-  storageSet("jv-theme", theme);
+async function setTheme(theme: string): Promise<void> {
+  await storageSet("jv-theme", theme);
   const root = document.getElementById("jv-root");
   if (root) root.dataset.theme = theme;
 }
 
-function cycleTheme(): void {
-  const current = getTheme();
+async function cycleTheme(): Promise<void> {
+  const current = await getTheme();
   const next = current === "auto" ? "dark" : current === "dark" ? "light" : "auto";
-  setTheme(next);
-  updateThemeButton();
+  await setTheme(next);
+  await updateThemeButton();
 }
 
-function updateThemeButton(): void {
+async function updateThemeButton(): Promise<void> {
   const btn = document.getElementById("jv-theme-toggle");
   if (!btn) return;
-  const theme = getTheme();
+  const theme = await getTheme();
   const icons: Record<string, string> = { auto: "◐", dark: "☾", light: "☀" };
   btn.textContent = icons[theme];
 }
 
-function init(): void {
+async function init(): Promise<void> {
   const result = detectJSON();
   if (!result) return;
 
@@ -86,7 +87,7 @@ function init(): void {
   // Build viewer DOM
   const root = document.createElement("div");
   root.id = "jv-root";
-  root.dataset.theme = getTheme();
+  root.dataset.theme = await getTheme();
 
   root.innerHTML = `
     <div id="jv-toolbar">
@@ -125,7 +126,7 @@ function init(): void {
       root.style.setProperty("--cursor-custom", "default");
     }
   }
-  applyCustomCursor(storageGet("jv-custom-cursor") === "true");
+  applyCustomCursor(await storageGet("jv-custom-cursor", "false") === "true");
 
   // Re-inject styles (we nuked the head)
   const style = document.createElement("style");
@@ -235,7 +236,7 @@ function init(): void {
   });
 
   // Theme toggle
-  updateThemeButton();
+  await updateThemeButton();
   document.getElementById("jv-theme-toggle")!.addEventListener("click", cycleTheme);
 
   // Settings menu
@@ -252,9 +253,9 @@ function init(): void {
 
   // Custom cursor toggle
   const cursorCheckbox = document.getElementById("jv-cursor-toggle") as HTMLInputElement;
-  cursorCheckbox.checked = storageGet("jv-custom-cursor") === "true";
-  cursorCheckbox.addEventListener("change", () => {
-    storageSet("jv-custom-cursor", String(cursorCheckbox.checked));
+  cursorCheckbox.checked = await storageGet("jv-custom-cursor", "false") === "true";
+  cursorCheckbox.addEventListener("change", async () => {
+    await storageSet("jv-custom-cursor", String(cursorCheckbox.checked));
     applyCustomCursor(cursorCheckbox.checked);
   });
 
